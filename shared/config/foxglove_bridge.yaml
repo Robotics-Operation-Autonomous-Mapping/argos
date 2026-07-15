@@ -1,0 +1,15 @@
+foxglove_bridge:
+  ros__parameters:
+    port: 8765
+    address: "0.0.0.0"
+    tls: false
+    use_compression: true
+    send_buffer_limit: 10000000
+    topic_whitelist: [".*"]
+    service_whitelist: [".*"]
+    param_whitelist: [".*"]
+    client_topic_whitelist: [".*"]
+    min_qos_depth: 1
+    max_qos_depth: 10
+    num_threads: 0
+    capabilities: ["clientPublish", "parameters", "parametersSubscribe", "services", "connectionGraph", "assets"]

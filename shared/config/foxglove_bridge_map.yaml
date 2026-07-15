@@ -1,0 +1,33 @@
+# Foxglove bridge — live map showcase whitelist
+#
+# Prefer this on Pi A (mapper) or laptop-facing bridges. Do NOT stream raw
+# Blackfly + 2× Vivotek live; bandwidth is the real CycloneDDS limit.
+# Laptop subscribes on the domain — no Pi "forward" required.
+#
+# Use foxglove_bridge.yaml (topic_whitelist: [" .* "]) only for lab debugging.
+
+foxglove_bridge:
+  ros__parameters:
+    port: 8765
+    address: "0.0.0.0"
+    tls: false
+    use_compression: true
+    send_buffer_limit: 10000000
+    topic_whitelist:
+      - ".*/ov_msckf/odomimu"
+      - ".*/odom"
+      - ".*/tf"
+      - ".*/tf_static"
+      - ".*/scan"
+      - ".*/points"
+      - ".*/points_compressed"
+      - ".*/rtabmap/.*"
+      - ".*/map"
+      - ".*/cloud_map"
+    service_whitelist: [".*"]
+    param_whitelist: [".*"]
+    client_topic_whitelist: [".*"]
+    min_qos_depth: 1
+    max_qos_depth: 10
+    num_threads: 0
+    capabilities: ["clientPublish", "parameters", "parametersSubscribe", "services", "connectionGraph", "assets"]

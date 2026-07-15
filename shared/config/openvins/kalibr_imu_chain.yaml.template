@@ -1,0 +1,40 @@
+%YAML:1.0
+
+# ARGOS imu chain (Kalibr-compatible). Rendered by entrypoint via envsubst.
+# Topics must be raw IMU — do NOT feed Madgwick-filtered IMU into OpenVINS.
+
+imu0:
+  T_i_b:
+    - [1.0, 0.0, 0.0, 0.0]
+    - [0.0, 1.0, 0.0, 0.0]
+    - [0.0, 0.0, 1.0, 0.0]
+    - [0.0, 0.0, 0.0, 1.0]
+  # Replace with datasheet / Kalibr noise for your IMU.
+  accelerometer_noise_density: 2.0000e-3
+  accelerometer_random_walk: 3.0000e-3
+  gyroscope_noise_density: 1.6968e-04
+  gyroscope_random_walk: 1.9393e-05
+  rostopic: ${IMU_TOPIC}
+  time_offset: 0.0
+  update_rate: ${IMU_RATE_HZ}
+  model: "kalibr"
+  Tw:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  R_IMUtoGYRO:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  Ta:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  R_IMUtoACC:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  Tg:
+    - [ 0.0, 0.0, 0.0 ]
+    - [ 0.0, 0.0, 0.0 ]
+    - [ 0.0, 0.0, 0.0 ]

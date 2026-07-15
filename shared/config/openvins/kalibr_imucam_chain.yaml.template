@@ -1,0 +1,19 @@
+%YAML:1.0
+
+# ARGOS cam0 chain (Kalibr-compatible). Rendered by entrypoint via envsubst.
+# REPLACE intrinsics / T_imu_cam with real Kalibr results before serious runs.
+# Mono only — cam1 omitted (use_stereo: false, max_cameras: 1).
+
+cam0:
+  T_imu_cam: # R_CtoI, p_CinI — identity placeholder; replace with Kalibr
+    - [1.0, 0.0, 0.0, 0.0]
+    - [0.0, 1.0, 0.0, 0.0]
+    - [0.0, 0.0, 1.0, 0.0]
+    - [0.0, 0.0, 0.0, 1.0]
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: [0.0, 0.0, 0.0, 0.0]
+  distortion_model: radtan
+  intrinsics: [500.0, 500.0, 320.0, 240.0] # fu, fv, cu, cv
+  resolution: [${IMAGE_WIDTH}, ${IMAGE_HEIGHT}]
+  rostopic: ${CAMERA_IMAGE_TOPIC}

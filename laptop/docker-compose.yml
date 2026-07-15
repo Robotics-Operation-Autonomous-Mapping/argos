@@ -1,0 +1,69 @@
+# ARGOS — laptop services (linux/amd64)
+# Usage (from laptop/):
+#   cp ../shared/.env.example .env
+#   ./scripts/build.sh
+#   ./scripts/run.sh playback
+#   ./scripts/run.sh monitor
+#   ./scripts/run.sh analysis
+
+services:
+  playback:
+    image: ${IMAGE_REGISTRY:-argos}/argos-laptop:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: laptop/docker/Dockerfile
+      platforms:
+        - linux/amd64
+    network_mode: host
+    env_file: .env
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - USE_SIM_TIME=true
+    volumes:
+      - ../shared/config:/workspace/config:ro
+      - ../shared/calib:/workspace/calib:ro
+      - ./launch:/workspace/launch:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:ro
+      - argos-laptop-data:/data
+    profiles: ["playback"]
+    command: ["ros2", "launch", "/workspace/launch/laptop_playback.launch.py"]
+
+  monitor:
+    image: ${IMAGE_REGISTRY:-argos}/argos-laptop:${IMAGE_TAG:-latest}
+    network_mode: host
+    env_file: .env
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+    volumes:
+      - ../shared/config:/workspace/config:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${HOME}/.Xauthority:/root/.Xauthority:ro
+    profiles: ["monitor"]
+    command: ["ros2", "run", "rviz2", "rviz2"]
+
+  analysis:
+    image: ${IMAGE_REGISTRY:-argos}/argos-laptop:${IMAGE_TAG:-latest}
+    network_mode: host
+    env_file: .env
+    volumes:
+      - ./notebooks:/workspace/notebooks
+      - argos-laptop-data:/data
+    profiles: ["analysis"]
+    command:
+      - bash
+      - -lc
+      - >
+        jupyter lab --ip=0.0.0.0 --port=8888 --no-browser
+        --allow-root --notebook-dir=/workspace/notebooks
+
+volumes:
+  argos-laptop-data:

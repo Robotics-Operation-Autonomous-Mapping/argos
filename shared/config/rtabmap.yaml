@@ -1,0 +1,68 @@
+# RTABMAP mapping / loop closure with EXTERNAL odometry from OpenVINS.
+#
+# Critical: do NOT run rtabmap_odom/rgbd_odometry — that path expects RGB-D
+# (or is a poor mono VO substitute). ARGOS feeds OpenVINS odometry into
+# rtabmap via the `odom` remap (see pi/lidar, pi/vio, and laptop launches).
+#
+# Madgwick is intentionally omitted: OpenVINS needs raw IMU (/imu/data_raw).
+# OpenVINS has no VIO loop-closure node analogous to VINS loop_fusion —
+# RTABMAP owns LC.
+#
+# Preferred multi-Pi realtime path:
+#   Pi B  → OpenVINS /ov_msckf/odomimu (Blackfly+IMU); Vivoteks are COLMAP-only
+#   Pi A  → local /scan + native RTABMAP (consumes OV odom over CycloneDDS)
+#   Laptop → Foxglove/RViz subscribe (whitelisted map topics; not raw 3-cam)
+# Alternatives: RTABMAP on VIO Pi; RTABMAP live on laptop (needs good Wi-Fi).
+# Lidar fusion knobs below — enable when /scan is reliable and clocks are synced
+# (see shared/docs/time_sync.md).
+
+rtabmap:
+  ros__parameters:
+    # Frames: OpenVINS typically uses header.frame_id = "global" on odom.
+    # Override odom_frame_id from OV_ODOM_FRAME_ID in launch files.
+    frame_id: blackfly_link
+    odom_frame_id: global
+    map_frame_id: map
+
+    # External VIO — mono image + camera_info only (no depth / stereo).
+    # On Pi A preferred path, RGB may arrive over DDS from Blackfly if needed;
+    # lidar+odom is the local priority.
+    subscribe_depth: false
+    subscribe_stereo: false
+    subscribe_rgbd: false
+    subscribe_odom_info: false
+    # Raw IMU optional into RTABMAP; OpenVINS already fused IMU.
+    subscribe_imu: false
+
+    # Lidar: preferred true on Pi A once chrony + extrinsics are trusted.
+    # Remap scan:=${LIDAR_SCAN_TOPIC} on the mapping host.
+    subscribe_scan: false
+    # subscribe_scan_cloud: false
+
+    approx_sync: true
+    # Sized for ~10 Hz camera on Pi 4; multi-host DDS adds some jitter.
+    queue_size: 30
+    topic_queue_size: 30
+    sync_queue_size: 30
+
+    publish_tf: true
+    wait_for_transform: 0.2
+
+    # Core mapping
+    Mem/IncrementalMemory: "true"
+    Mem/InitWMWithAllNodes: "false"
+    # No depth source — occupancy from mono alone is weak; lidar grid later.
+    RGBD/CreateOccupancyGrid: "false"
+    Grid/FromDepth: "false"
+
+    # Loop closure — RTABMAP owns LC.
+    Kp/DetectorStrategy: "6"
+    Vis/MinInliers: "15"
+    RGBD/OptimizeFromGraphEnd: "false"
+    RGBD/ProximityBySpace: "true"
+    Rtabmap/DetectionRate: "2.0"
+    Rtabmap/TimeThr: "0"
+
+    # Visual features budget for Pi
+    Kp/MaxFeatures: "400"
+    Mem/STMSize: "30"

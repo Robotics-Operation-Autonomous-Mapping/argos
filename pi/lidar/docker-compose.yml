@@ -1,0 +1,33 @@
+# ARGOS — Pi A (lidar) bringup + preferred RTABMAP host
+# Publishes scan/cloud onto the shared ROS domain. OpenVINS stays on Pi B.
+# Native RTABMAP: ./scripts/run_rtabmap_host.sh (consumes OV odom over DDS).
+#
+# Usage (from pi/lidar/):
+#   cp ../../shared/.env.example .env
+#   ./scripts/run.sh              # host bringup stub / documented remaps
+#   ./scripts/run.sh rtabmap      # preferred native RTABMAP
+#   ./scripts/run.sh foxglove     # optional bridge (prefer map whitelist config)
+#
+# Replace the placeholder lidar_driver command with your vendor node
+# (e.g. rplidar, livetox, sick, ouster). Compose is intentionally thin.
+
+services:
+  # Optional Foxglove bridge only — lidar drivers usually run on the host.
+  foxglove:
+    image: ${IMAGE_REGISTRY:-argos}/argos-pi-lidar:${IMAGE_TAG:-latest}
+    build:
+      context: ../..
+      dockerfile: pi/lidar/docker/Dockerfile
+      platforms:
+        - linux/arm64
+    network_mode: host
+    env_file: .env
+    environment:
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+    volumes:
+      - ../../shared/config:/workspace/config:ro
+      - ./launch:/workspace/launch:ro
+    profiles: ["foxglove"]
+    command: ["ros2", "launch", "/workspace/launch/foxglove_only.launch.py"]

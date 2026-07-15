@@ -1,0 +1,25 @@
+# Placeholder CameraInfo until real calibration is published by the driver.
+# Prefer publishing real sensor_msgs/CameraInfo from the camera node.
+# OpenVINS uses kalibr_imucam_chain.yaml for VIO intrinsics/extrinsics;
+# RTABMAP still needs CameraInfo on CAMERA_INFO_TOPIC for feature projections.
+
+image_width: 640
+image_height: 480
+camera_name: argos_mono
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [500.0, 0.0, 320.0, 0.0, 500.0, 240.0, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [500.0, 0.0, 320.0, 0.0, 0.0, 500.0, 240.0, 0.0, 0.0, 0.0, 1.0, 0.0]

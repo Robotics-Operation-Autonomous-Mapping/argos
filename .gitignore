@@ -1,0 +1,50 @@
+# Environment and secrets
+.env
+**/.env
+*.pem
+*.key
+
+# Data / bags / maps (large)
+data/
+**/data/*
+!**/data/.gitkeep
+*.bag
+*.mcap
+*.db
+*.db-shm
+*.db-wal
+rtabmap.db*
+
+# Calibration outputs (keep placeholders tracked)
+shared/calib/*
+!shared/calib/.gitkeep
+!shared/calib/README.md
+
+# Python / notebooks
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# ROS / colcon
+install/
+build/
+log/
+*.pcd
+*.ply
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Rendered configs
+/tmp/cyclonedds.xml
+/tmp/openvins/
+
+# Docker
+.docker/
+*.tar

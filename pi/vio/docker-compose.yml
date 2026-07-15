@@ -1,0 +1,112 @@
+# ARGOS Pi B (VIO) — OpenVINS only in Docker (NO RTABMAP in image).
+# Preferred RTABMAP host is Pi A — see pi/lidar/scripts/run_rtabmap_host.sh
+# Alternative on this Pi: ./scripts/run_rtabmap_host.sh
+#
+# Usage (from pi/vio/):
+#   cp ../../shared/.env.example .env   # set PI_LIDAR_IP / PI_VIO_IP / LAPTOP_IP
+#   ./scripts/build.sh
+#   ./scripts/run.sh                    # openvins (+ foxglove)
+#   ./scripts/run.sh recording          # general session rosbag2
+#   ./scripts/run.sh colmap             # Vivotek COLMAP mcap (+ tf/odom)
+#   ./scripts/record_colmap.sh          # host-side COLMAP recorder (throttle-capable)
+
+services:
+  openvins:
+    image: ${IMAGE_REGISTRY:-argos}/argos-pi-vio:${IMAGE_TAG:-latest}
+    build:
+      # argos/ root so Dockerfile can COPY shared/scripts/install_openvins.sh
+      context: ../..
+      dockerfile: pi/vio/docker/Dockerfile
+      platforms:
+        - linux/arm64
+    network_mode: host
+    privileged: true
+    env_file: .env
+    environment:
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+    volumes:
+      - ../../shared/config:/workspace/config:ro
+      - ../../shared/calib:/workspace/calib:ro
+      - ./launch:/workspace/launch:ro
+      - argos-vio-data:/data
+    command: ["ros2", "launch", "/workspace/launch/openvins.launch.py"]
+    restart: unless-stopped
+
+  recorder:
+    image: ${IMAGE_REGISTRY:-argos}/argos-pi-vio:${IMAGE_TAG:-latest}
+    network_mode: host
+    privileged: true
+    env_file: .env
+    environment:
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+    volumes:
+      - ../../shared/config:/workspace/config:ro
+      - argos-vio-data:/data
+    profiles: ["recording"]
+    depends_on:
+      - openvins
+    entrypoint: ["/entrypoint.sh"]
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        mkdir -p "$${BAG_OUTPUT_DIR:-/data/bags}"
+        OUT="$${BAG_OUTPUT_DIR:-/data/bags}/session_$$(date +%Y%m%d_%H%M%S)"
+        exec ros2 bag record -o "$${OUT}" --storage "$${BAG_STORAGE_ID:-mcap}" \
+          "$${CAMERA_IMAGE_TOPIC:-$${BLACKFLY_IMAGE_TOPIC:-/blackfly/image_raw}}" \
+          "$${CAMERA_INFO_TOPIC:-$${BLACKFLY_INFO_TOPIC:-/blackfly/camera_info}}" \
+          "$${IMU_TOPIC:-/imu/data_raw}" \
+          "$${OV_ODOM_TOPIC:-/ov_msckf/odomimu}" \
+          "$${LIDAR_SCAN_TOPIC:-/scan}" \
+          /tf /tf_static \
+          /rtabmap/mapData /rtabmap/cloud_map
+
+  # Photogrammetry / COLMAP: 2× Vivotek (+ tf/odom). Prefer host record_colmap.sh
+  # when you need COLMAP_IMAGE_RATE_HZ throttling via topic_tools.
+  colmap_recorder:
+    image: ${IMAGE_REGISTRY:-argos}/argos-pi-vio:${IMAGE_TAG:-latest}
+    network_mode: host
+    privileged: true
+    env_file: .env
+    environment:
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+    volumes:
+      - ../../shared/config:/workspace/config:ro
+      - argos-vio-data:/data
+    profiles: ["colmap"]
+    depends_on:
+      - openvins
+    entrypoint: ["/entrypoint.sh"]
+    command:
+      - bash
+      - -lc
+      - |
+        set -euo pipefail
+        mkdir -p "$${BAG_OUTPUT_DIR:-/data/bags}"
+        OUT="$${BAG_OUTPUT_DIR:-/data/bags}/colmap_$$(date +%Y%m%d_%H%M%S)"
+        EXTRA=()
+        if [[ "$${COLMAP_INCLUDE_BLACKFLY:-false}" =~ ^(1|true|yes)$$ ]]; then
+          EXTRA=(
+            "$${CAMERA_IMAGE_TOPIC:-$${BLACKFLY_IMAGE_TOPIC:-/blackfly/image_raw}}"
+            "$${CAMERA_INFO_TOPIC:-$${BLACKFLY_INFO_TOPIC:-/blackfly/camera_info}}"
+          )
+        fi
+        echo "COLMAP bag → $${OUT} (full-rate Vivotek; subsample offline or use host record_colmap.sh)"
+        exec ros2 bag record -o "$${OUT}" --storage "$${BAG_STORAGE_ID:-mcap}" \
+          "$${VIVOTEK_LEFT_TOPIC:-/vivotek/left/image_raw}" \
+          "$${VIVOTEK_RIGHT_TOPIC:-/vivotek/right/image_raw}" \
+          "$${VIVOTEK_LEFT_INFO_TOPIC:-/vivotek/left/camera_info}" \
+          "$${VIVOTEK_RIGHT_INFO_TOPIC:-/vivotek/right/camera_info}" \
+          "$${OV_ODOM_TOPIC:-/ov_msckf/odomimu}" \
+          /tf /tf_static \
+          "$${EXTRA[@]}"
+
+volumes:
+  argos-vio-data:

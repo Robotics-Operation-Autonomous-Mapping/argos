@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  CycloneDDS multi-host peers for ARGOS (lidar Pi + VIO Pi + laptop).
+  Rendered via envsubst: PI_LIDAR_IP, PI_VIO_IP, LAPTOP_IP.
+  Requires network_mode: host (Docker) or host networking on native ROS.
+  Same ROS_DOMAIN_ID on every participant.
+-->
+<CycloneDDS>
+  <Domain id="any">
+    <General>
+      <AllowMulticast>spdp</AllowMulticast>
+    </General>
+    <Discovery>
+      <ParticipantIndex>auto</ParticipantIndex>
+      <Peers>
+        <Peer address="${PI_LIDAR_IP}"/>
+        <Peer address="${PI_VIO_IP}"/>
+        <Peer address="${LAPTOP_IP}"/>
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>

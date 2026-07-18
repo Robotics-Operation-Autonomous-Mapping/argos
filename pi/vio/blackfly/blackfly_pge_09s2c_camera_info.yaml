@@ -1,0 +1,25 @@
+# CameraInfo for BFLY-PGE-09S2C (cam0, color, serial 13125051) at full res 1288x728.
+# PLACEHOLDER intrinsics — replace with real Kalibr / camera_calibration output before
+# serious VIO runs. camera_aravis2 loads this via camera_info_urls and publishes it on
+# /blackfly/camera_info. OpenVINS itself reads intrinsics from kalibr_imucam_chain.yaml,
+# but RTABMAP and rqt tools use this CameraInfo. Keep resolution in sync with the driver.
+image_width: 1288
+image_height: 728
+camera_name: blackfly_pge_09s2c
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [1000.0, 0.0, 644.0, 0.0, 1000.0, 364.0, 0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [1000.0, 0.0, 644.0, 0.0, 0.0, 1000.0, 364.0, 0.0, 0.0, 0.0, 1.0, 0.0]

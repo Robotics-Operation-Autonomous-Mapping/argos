@@ -1,0 +1,72 @@
+#!/bin/bash
+# List FLIR cameras visible to the Spinnaker SDK (USB3 and GigE).
+set -euo pipefail
+
+SPINNAKER_BIN="${SPINNAKER_ROOT_DIR:-/opt/spinnaker}/bin"
+ENUM="${SPINNAKER_BIN}/Enumeration"
+NODEMAP="${SPINNAKER_BIN}/NodeMapInfo"
+
+if [[ ! -x "${ENUM}" ]]; then
+  echo "Spinnaker Enumeration tool not found at ${ENUM}" >&2
+  echo "Install the Spinnaker SDK or set SPINNAKER_ROOT_DIR." >&2
+  exit 1
+fi
+
+echo "Scanning for FLIR cameras (close SpinView first if it is open)..."
+echo ""
+
+# Enumeration waits for Enter before exiting; send newline so it finishes cleanly.
+output=$(printf '\n' | timeout 25 "${ENUM}" 2>&1) || {
+  rc=$?
+  if [[ ${rc} -eq 124 ]]; then
+    echo "Enumeration timed out before completing." >&2
+    exit 1
+  fi
+  echo "${output}"
+  exit "${rc}"
+}
+
+echo "${output}"
+
+camera_count=$(echo "${output}" | grep -m1 '^Number of cameras detected:' | awk '{print $NF}')
+device_lines=$(echo "${output}" | grep -E '^\tDevice [0-9]+ ' || true)
+
+echo ""
+echo "========== Summary =========="
+if [[ -z "${camera_count}" || "${camera_count}" == "0" ]]; then
+  echo "No cameras detected."
+  echo ""
+  echo "For GigE cameras, check:"
+  echo "  1. Camera is powered (PoE injector or switch with PoE)"
+  echo "  2. Ethernet cable is connected to the host NIC"
+  echo "  3. Host NIC has an IP on the same subnet as the camera"
+  echo "  4. Firewall is not blocking GigE Vision traffic"
+  echo ""
+  echo "Try SpinView: /opt/spinnaker/bin/spinview"
+  exit 1
+fi
+
+echo "Cameras detected: ${camera_count}"
+if [[ -n "${device_lines}" ]]; then
+  echo "${device_lines}" | sed 's/^\tDevice /  - /'
+fi
+
+if [[ -x "${NODEMAP}" ]]; then
+  serials=$(printf '\n' | timeout 15 "${NODEMAP}" 2>&1 | grep 'Device Serial Number:' | awk '{print $NF}' || true)
+  if [[ -n "${serials}" ]]; then
+    echo ""
+    echo "Serial number(s):"
+    echo "${serials}" | sed 's/^/  /'
+    echo ""
+    echo "Launch example:"
+    first_serial=$(echo "${serials}" | head -1)
+    echo "  ros2 launch spinnaker_camera_driver blackfly_pge_09s2c_launch.py serial:=\"'${first_serial}'\""
+  else
+    echo ""
+    echo "Could not read serial (camera may be open in SpinView)."
+    echo "Close SpinView and run this script again, or read serial from SpinView:"
+    echo "  Device Information -> Device Serial Number"
+  fi
+fi
+
+exit 0

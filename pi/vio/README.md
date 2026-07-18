@@ -4,6 +4,14 @@
 
 OpenVINS runs on **Blackfly + IMU only**. Do not feed Vivotek topics into OpenVINS.
 
+**Blackfly drivers / preview / bag scripts:** see [`blackfly/README.md`](./blackfly/README.md) (Aravis ROS 2 Humble; optional Spinnaker wrappers).
+
+**Live VIO camera feed (proper `ros2 launch`, no recording):** run the Blackfly through
+`camera_aravis2` — `ros2 launch ./blackfly/blackfly_vio.launch.py` publishes
+`/blackfly/image_raw` @ 10 Hz for OpenVINS. Debug with `ros2 run rqt_image_view
+rqt_image_view` and tune exposure/gain with `ros2 run rqt_reconfigure rqt_reconfigure`.
+See [`blackfly/README.md`](./blackfly/README.md#proper-ros-2-way-ros2-launch-for-openvins-recommended-on-the-pi).
+
 **Storage (32 GB):** keep this Pi lean — short buffers only. Dump COLMAP / Vivotek
 recordings to the **256 GB Pi A** (RTABMAP staging) or the laptop often. COLMAP
 runs on the laptop, not here.

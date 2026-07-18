@@ -1,7 +1,10 @@
 # ARGOS laptop — OpenVINS + RTABMAP + RViz + Foxglove + Jupyter (linux/amd64)
 # Build from argos/ root (see docker-compose.yml context).
 # COLMAP / CloudCompare stay host-only.
-ARG BASE_IMAGE=ros:humble-desktop
+# NOTE: desktop images (RViz2 + GUI tools) are published under `osrf/ros`, NOT the
+# official `ros` library (which stops at `humble-perception`). `ros:humble-desktop`
+# does not exist and fails at build time — always use `osrf/ros:humble-desktop`.
+ARG BASE_IMAGE=osrf/ros:humble-desktop
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \

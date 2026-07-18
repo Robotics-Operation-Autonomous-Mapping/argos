@@ -1,0 +1,17 @@
+# ARGOS line-ending policy
+# These files are executed inside Linux hosts / Docker containers, so they MUST
+# stay LF even when the repo is cloned or pulled on Windows. Without this, Git's
+# core.autocrlf can rewrite them to CRLF and break `#!/bin/bash` (bad interpreter)
+# and Dockerfile line continuations.
+
+# Shell scripts (host + container entrypoints, install_openvins.sh, etc.)
+*.sh            text eol=lf
+
+# Container + compose + config assets rendered/executed on Linux
+Dockerfile      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.xml           text eol=lf
+*.template      text eol=lf
+*.py            text eol=lf
+entrypoint.sh   text eol=lf

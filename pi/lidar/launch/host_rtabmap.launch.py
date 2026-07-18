@@ -18,6 +18,21 @@ def env(name: str, default: str = "") -> str:
     return os.environ.get(name, default)
 
 
+def shared_dir() -> str:
+    """Resolve the argos shared/ dir for both native and docker runs.
+
+    Order: ARGOS_SHARED override → docker mount (/workspace when present) →
+    repo shared/ computed relative to this launch file (<repo>/argos/shared).
+    """
+    override = os.environ.get("ARGOS_SHARED")
+    if override:
+        return override
+    if os.path.isdir("/workspace/config"):
+        return "/workspace"
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.abspath(os.path.join(here, "..", "..", "..", "shared"))
+
+
 def _launch_setup(context, *args, **kwargs):
     image_topic = env("CAMERA_IMAGE_TOPIC", env("BLACKFLY_IMAGE_TOPIC", "/blackfly/image_raw"))
     camera_info_topic = env("CAMERA_INFO_TOPIC", env("BLACKFLY_INFO_TOPIC", "/blackfly/camera_info"))
@@ -26,7 +41,7 @@ def _launch_setup(context, *args, **kwargs):
     camera_frame = env("CAMERA_FRAME_ID", "blackfly_link")
     scan_topic = env("LIDAR_SCAN_TOPIC", "/scan")
     db_path = env("RTABMAP_DATABASE_PATH", os.path.expanduser("~/argos_data/rtabmap.db"))
-    shared = env("ARGOS_SHARED", "/workspace")
+    shared = shared_dir()
     config = env("RTABMAP_CONFIG", f"{shared}/config/rtabmap.yaml")
     use_lidar = env("RTABMAP_USE_LIDAR", "true").lower() in ("1", "true", "yes")
     delete_db = env("RTABMAP_DELETE_DB_ON_START", "true").lower() in (

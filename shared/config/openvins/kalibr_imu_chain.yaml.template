@@ -11,8 +11,8 @@ imu0:
     - [0.0, 0.0, 0.0, 1.0]
   # PLACEHOLDER values from imu_allan_20260717_1411 (2.55 h static) — that bag was on
   # the Madgwick-FUSED /imu/data and is being redone on the RAW /imu/data_raw
-  # (ros2_icm20948, raw_only:=true) at the LOCKED 200 Hz (pub_rate_hz alone did NOT
-  # cap the raw topic — see pi/vio/README.md). update_rate below reads IMU_RATE_HZ=200.
+  # (ros2_icm20948, raw_only:=true) at the NATIVE ~320 Hz (pub_rate_hz does NOT cap
+  # the raw topic — see pi/vio/README.md). update_rate below reads IMU_RATE_HZ=320.
   # Recompute the four values below from the redone bag:
   #   python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data_raw
   # NOTE: for robust VIO it is common to INFLATE these ~5-10x (noise) and ~10x

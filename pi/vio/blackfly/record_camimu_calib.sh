@@ -6,7 +6,8 @@
 #  Bring the sensors up FIRST (both must already be publishing):
 #    ros2 launch ./blackfly_vio.launch.py serial:="Point Grey Research-Blackfly ..."
 #    ros2 run ros2_icm20948 icm20948_node --ros-args -p raw_only:=true -p pub_rate_hz:=200
-#  (IMU is locked to 200 Hz — see ../README.md "Lock the raw topic to a real 200 Hz".)
+#  (IMU free-runs at its native ~320 Hz — pub_rate_hz does NOT cap /imu/data_raw;
+#   see ../README.md "IMU rate: run at native ~320 Hz and keep it consistent".)
 #
 #  Usage (from pi/vio/blackfly/):
 #    ./record_camimu_calib.sh                 # cam+IMU calib bag (excite all 6 DoF)
@@ -15,7 +16,7 @@
 #    ALLAN_HOURS=3 ./record_camimu_calib.sh --allan
 #
 #  A preflight VERIFY clause confirms BOTH topics are live at a nonzero rate
-#  (expect ~10 Hz cam, ~200 Hz IMU) and ABORTS if either is missing/silent.
+#  (expect ~10 Hz cam, ~320 Hz IMU) and ABORTS if either is missing/silent.
 # =============================================================================
 set -euo pipefail
 
@@ -57,7 +58,7 @@ BAG_STORAGE_ID="${BAG_STORAGE_ID:-mcap}"
 
 # Expected rates (Hz) — used for reporting + a nonzero preflight gate.
 CAM_EXPECT_HZ="${CAM_EXPECT_HZ:-10}"
-IMU_EXPECT_HZ="${IMU_EXPECT_HZ:-${IMU_RATE_HZ:-200}}"
+IMU_EXPECT_HZ="${IMU_EXPECT_HZ:-${IMU_RATE_HZ:-320}}"
 
 # =============================================================================
 #  Preflight VERIFY — both topics must be LIVE at a nonzero rate, else ABORT.

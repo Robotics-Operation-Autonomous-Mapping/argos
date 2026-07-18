@@ -19,8 +19,8 @@ runs on the laptop, not here.
 ## Bringup: Blackfly + ICM-20948 IMU (validated on Pi B)
 
 The exact sequence that produced a live `/blackfly/image_raw` @ 10 Hz and raw
-`/imu/data_raw` @ a **locked 200 Hz** feeding OpenVINS. Run each block in its own
-terminal after `source /opt/ros/humble/setup.bash`.
+`/imu/data_raw` @ the sensor's **native ~320 Hz** feeding OpenVINS. Run each block
+in its own terminal after `source /opt/ros/humble/setup.bash`.
 
 ### 1. Blackfly camera (`camera_aravis2`)
 
@@ -106,66 +106,30 @@ ros2 pkg executables ros2_icm20948
 ros2 run ros2_icm20948 icm20948_node --ros-args -p raw_only:=true -p pub_rate_hz:=200
 ```
 
+> Note: `pub_rate_hz` does **not** actually cap the raw `/imu/data_raw` topic —
+> the raw path free-runs at the sensor-limited **native ~320 Hz** (measured
+> ~320.7 Hz, very stable) regardless of this value. That native rate is what
+> feeds OpenVINS; see "IMU rate: run at native ~320 Hz" below.
+
 Publishes `/imu/data_raw` — **raw accel+gyro, `orientation_covariance[0] = -1`**
 (no orientation).
 
 > **IMPORTANT:** feed **`/imu/data_raw`** to OpenVINS. Do **NOT** feed `/imu/data`
 > (that is the Madgwick-fused topic). See `IMU_TOPIC` in `shared/.env.example`.
 
-#### Lock the raw topic to a real 200 Hz
+#### IMU rate: run at native ~320 Hz and keep it consistent
 
-`pub_rate_hz:=200` does **NOT** cap the raw topic — the raw path was observed
-free-running at **~321 Hz** (it reads the sensor and publishes as fast as the I2C
-bus allows; `pub_rate_hz` only affected the fused/`raw_only:=false` path). For
-Allan variance + Kalibr + OpenVINS the IMU rate must be **stable and identical**
-between the calibration bag and live VIO, so we pin the publish to a fixed 200 Hz.
+`pub_rate_hz` does **NOT** effectively cap the raw topic — the raw path free-runs
+at the **sensor-limited native ~320 Hz** (measured ~320.7 Hz, very stable; it
+reads the sensor and publishes as fast as the I2C bus allows). So just run the
+driver at its native rate — no driver patch needed. The one thing that matters is
+**CONSISTENCY**: use the **same rate** for the Allan-variance bag, the live
+OpenVINS run, and `IMU_RATE_HZ` in `shared/.env.example` (`IMU_RATE_HZ=320`).
 
-**Why 200 (not exactly the sensor ODR):** the ICM-20948 accel/gyro ODR is
-`1125 / (1 + SMPLRT_DIV)` Hz, so 200 Hz is not an integer divisor (div 4 → 225 Hz,
-div 5 → 187.5 Hz). The robust, standard fix is to let the sensor sample a bit
-faster and **publish on a fixed 200 Hz ROS timer** that reads the freshest sample
-each tick (this reference driver measures `ros2 topic hz` ≈ 200.04 Hz that way).
-
-The driver (`~/ros2_icm20948_driver`, package `ros2_icm20948`) is an **external
-dependency, NOT vendored in argos and NOT under git here** — apply this small edit
-to its `ros2_icm20948/icm20948_node.py` so the raw topic is locked:
-
-1. In `__init__`, after `self.imu.begin()`, set a stable ODR (enable each DLPF so
-   `SMPLRT_DIV` takes effect, then divide the 1125 Hz base to 225 Hz — one step
-   above 200 for headroom) using the qwiic register API:
-
-```python
-IMU_ODR_DIV = 4  # 1125 / (1 + 4) = 225 Hz sensor ODR (>= 200 Hz publish)
-self.imu.enableDlpfGyro(True)
-self.imu.enableDlpfAccel(True)
-self.imu.setDLPFcfgGyro(1)     # ~152 Hz gyro bandwidth
-self.imu.setDLPFcfgAccel(1)    # ~136 Hz accel bandwidth
-self.imu.setBank(2)
-self.imu._i2c.writeByte(self.imu.address, self.imu.AGB2_REG_GYRO_SMPLRT_DIV, IMU_ODR_DIV)
-self.imu._i2c.writeByte(self.imu.address, self.imu.AGB2_REG_ACCEL_SMPLRT_DIV_1, (IMU_ODR_DIV >> 8) & 0x0F)
-self.imu._i2c.writeByte(self.imu.address, self.imu.AGB2_REG_ACCEL_SMPLRT_DIV_2, IMU_ODR_DIV & 0xFF)
-self.imu.setBank(0)
-```
-
-2. Make the raw path publish from a **fixed 200 Hz timer** (do not busy-loop /
-   publish-on-read). Ensure the timer period comes from `pub_rate_hz` and is
-   actually used for `raw_only:=true`:
-
-```python
-self.declare_parameter("pub_rate_hz", 200)
-self._pub_rate_hz = self.get_parameter("pub_rate_hz").get_parameter_value().integer_value
-self._timer = self.create_timer(1.0 / float(self._pub_rate_hz), self.publish_cback)
-# and REMOVE any while-loop / publish-on-dataReady path used when raw_only:=true
-```
-
-After rebuilding the driver (`colcon build --symlink-install` in
-`~/ros2_icm20948_driver`), the run command above produces a locked 200 Hz. Keep
-`shared/.env.example` `IMU_RATE_HZ=200` in sync with this.
-
-Verify (expect a steady **~200 Hz**):
+Verify (expect a steady **~320 Hz**):
 
 ```bash
-ros2 topic hz /imu/data_raw          # average rate ~200, tiny std dev
+ros2 topic hz /imu/data_raw          # average rate ~320, tiny std dev
 ros2 topic echo /imu/data_raw --once   # accel ~9.8 on one axis at rest; orientation_covariance[0] = -1
 ```
 
@@ -189,8 +153,8 @@ The **cam–IMU extrinsic + time offset (Kalibr)** is still the outstanding bloc
 trustworthy VIO — see [`../../shared/calib/README.md`](../../shared/calib/README.md).
 The IMU biases are also being **redone**: the old Allan bag was on the fused `/imu/data`,
 so a fresh **no-Madgwick** Allan recording on `/imu/data_raw` is in progress at the
-**locked 200 Hz** (see "Lock the raw topic to a real 200 Hz" above). `IMU_RATE_HZ`
-(in `shared/.env.example`) is now `200` to match both the locked driver and that bag.
+**native ~320 Hz** (see "IMU rate: run at native ~320 Hz" above). `IMU_RATE_HZ`
+(in `shared/.env.example`) is `320` to match both the live run and that bag.
 
 ## Quick start
 
@@ -237,7 +201,7 @@ Bags land under `$BAG_OUTPUT_DIR` (Docker volume: `/data/bags`).
 `blackfly/record_camimu_calib.sh` records the calibration bags with a **preflight
 VERIFY** that both sensors are actually live (aborts if `/blackfly/image_raw` or
 `/imu/data_raw` is missing/silent, and prints the measured rates — expect ~10 Hz
-cam, ~200 Hz IMU). Bring the camera + IMU up first, then:
+cam, ~320 Hz IMU). Bring the camera + IMU up first, then:
 
 ```bash
 cd blackfly

@@ -51,14 +51,16 @@ ros2 bag record -o imu_allan_$(date +%Y%m%d_%H%M) /imu/data_raw
 python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data_raw \
     --out shared/calib/<name>-imu.yaml
 ```
-Then copy the four `*_noise_density` / `*_random_walk` values into
-`shared/config/openvins/kalibr_imu_chain.yaml.template`, and keep `IMU_RATE_HZ` in
-`shared/.env.example` at the **locked 200 Hz** this bag is recorded at (the raw
-driver is pinned to 200 Hz — see
-[`../../pi/vio/README.md`](../../pi/vio/README.md#lock-the-raw-topic-to-a-real-200-hz)).
+Record this Allan bag at the IMU's **native ~320 Hz** (the same rate as the live
+run — do not throttle). Then copy the four `*_noise_density` / `*_random_walk`
+values into `shared/config/openvins/kalibr_imu_chain.yaml.template`, and keep
+`IMU_RATE_HZ` in `shared/.env.example` at that **native ~320 Hz** so it matches
+the live rate (the raw `/imu/data_raw` topic free-runs at ~320 Hz — `pub_rate_hz`
+does not cap it; see
+[`../../pi/vio/README.md`](../../pi/vio/README.md#imu-rate-run-at-native-320-hz-and-keep-it-consistent)).
 
 > The old `imu_allan_20260717_1411` bag was recorded on the fused `/imu/data` and is
-> being **redone** on raw `/imu/data_raw` at the locked **200 Hz** — the noise values
+> being **redone** on raw `/imu/data_raw` at the native **~320 Hz** — the noise values
 > below and in the template are placeholders until that no-Madgwick recording is
 > processed. Record it with `record_camimu_calib.sh --allan` (see `pi/vio/blackfly/`).
 

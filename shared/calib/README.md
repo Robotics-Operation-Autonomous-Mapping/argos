@@ -32,8 +32,8 @@ cam–IMU calibration below is run.
 ### IMU noise (Allan variance)
 Long (≥ ~3 h ideally) **perfectly static** recording of the RAW IMU topic:
 ```
-ros2 bag record -o imu_allan_$(date +%Y%m%d_%H%M) /imu/data_raw
-python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data_raw \
+ros2 bag record -o imu_allan_$(date +%Y%m%d_%H%M) /imu/data
+python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data \
     --out shared/calib/<name>-imu.yaml
 ```
 Then copy the four `*_noise_density` / `*_random_walk` values into

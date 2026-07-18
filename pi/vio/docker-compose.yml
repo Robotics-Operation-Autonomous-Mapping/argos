@@ -60,7 +60,7 @@ services:
         exec ros2 bag record -o "$${OUT}" --storage "$${BAG_STORAGE_ID:-mcap}" \
           "$${CAMERA_IMAGE_TOPIC:-$${BLACKFLY_IMAGE_TOPIC:-/blackfly/image_raw}}" \
           "$${CAMERA_INFO_TOPIC:-$${BLACKFLY_INFO_TOPIC:-/blackfly/camera_info}}" \
-          "$${IMU_TOPIC:-/imu/data_raw}" \
+          "$${IMU_TOPIC:-/imu/data}" \
           "$${OV_ODOM_TOPIC:-/ov_msckf/odomimu}" \
           "$${LIDAR_SCAN_TOPIC:-/scan}" \
           /tf /tf_static \

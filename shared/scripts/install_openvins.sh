@@ -66,7 +66,11 @@ fi
 
 echo "==> colcon build OpenVINS into /opt/argos_ws"
 # shellcheck disable=SC1091
+# ROS setup scripts reference unbound vars (e.g. AMENT_TRACE_SETUP_FILES);
+# relax nounset just for the source, then restore.
+set +u
 source /opt/ros/humble/setup.bash
+set -u
 cd /opt/argos_ws
 # Source tree is src/open_vins/{ov_core,ov_msckf,...} — colcon finds nested packages.
 colcon build \

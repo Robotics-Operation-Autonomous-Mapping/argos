@@ -26,6 +26,7 @@ from launch_ros.actions import Node
 def launch_setup(context, *args, **kwargs):
     camera_name = LaunchConfig('camera_name').perform(context)
     serial = LaunchConfig('serial').perform(context)
+    stream_name = LaunchConfig('stream_name').perform(context)
     frame_id = LaunchConfig('frame_id').perform(context)
     frame_rate = float(LaunchConfig('frame_rate').perform(context))
     pixel_format = LaunchConfig('pixel_format').perform(context)
@@ -54,7 +55,10 @@ def launch_setup(context, *args, **kwargs):
         # ---- driver-specific ----
         'guid': serial,                 # FLIR serial (camera_aravis2 accepts serial or IP)
         'frame_id': frame_id,
-        'stream_names': [''],           # single unnamed stream -> /<node>/image_raw
+        # camera_aravis2 always builds ~/<stream_name>/image_raw; an empty name
+        # yields the illegal "/blackfly//image_raw". Use a concrete name and
+        # remap it below to the OpenVINS-expected /blackfly/image_raw.
+        'stream_names': [stream_name],
         'camera_info_urls': [camera_info_url],
         'verbose': False,
         # ---- GenICam: transport layer (GigE) ----
@@ -86,10 +90,11 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         emulate_tty=True,
         parameters=[params],
+        # camera_aravis2 publishes under the stream name (~/<stream_name>/...).
         # Force the OpenVINS-expected topics regardless of driver defaults.
         remappings=[
-            ('~/image_raw', image_topic),
-            ('~/camera_info', info_topic),
+            ('~/' + stream_name + '/image_raw', image_topic),
+            ('~/' + stream_name + '/camera_info', info_topic),
         ],
     )
 
@@ -113,6 +118,12 @@ def generate_launch_description():
                 'frame_id',
                 default_value='blackfly_link',
                 description='frame_id stamped in image/camera_info headers (OpenVINS CAMERA_FRAME_ID)',
+            ),
+            LaunchArg(
+                'stream_name',
+                default_value='cam',
+                description='camera_aravis2 stream name; driver publishes ~/<stream_name>/image_raw '
+                            '(remapped to image_topic). Must be non-empty to avoid a "//" topic.',
             ),
             LaunchArg(
                 'frame_rate',

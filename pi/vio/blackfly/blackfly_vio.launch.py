@@ -69,12 +69,16 @@ def launch_setup(context, *args, **kwargs):
         # ---- GenICam: image format ----
         'ImageFormatControl': image_format,
         # ---- GenICam: acquisition (frame rate + exposure) ----
+        # These Point Grey BFLY-PGE cams use the legacy FLIR node names, not the
+        # SFNC 'AcquisitionFrameRateEnable'. Order matters: disable auto, enable
+        # manual, then set the rate — otherwise the cam free-runs at ~30 Hz.
         'AcquisitionControl': {
             'AcquisitionMode': 'Continuous',
+            'AcquisitionFrameRateAuto': 'Off',
+            'AcquisitionFrameRateEnabled': True,
+            'AcquisitionFrameRate': frame_rate,
             'ExposureMode': 'Timed',
             'ExposureAuto': exposure_auto,
-            'AcquisitionFrameRateEnable': True,
-            'AcquisitionFrameRate': frame_rate,
         },
         # ---- GenICam: analog (gain) ----
         'AnalogControl': {

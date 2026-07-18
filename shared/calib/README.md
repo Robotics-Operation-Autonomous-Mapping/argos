@@ -42,14 +42,22 @@ cam–IMU calibration below is run.
 ## How to (re)produce these
 
 ### IMU noise (Allan variance)
-Long (≥ ~3 h ideally) **perfectly static** recording of the RAW IMU topic:
+Long (≥ ~3 h ideally) **perfectly static** recording of the RAW IMU topic
+`/imu/data_raw` (RAW ros2_icm20948 output — **never** the Madgwick-fused `/imu/data`).
+Run the node with `raw_only:=true` so no Madgwick filter is loaded (see
+[`../../pi/vio/README.md`](../../pi/vio/README.md#icm-20948-imu-external-driver)):
 ```
-ros2 bag record -o imu_allan_$(date +%Y%m%d_%H%M) /imu/data
-python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data \
+ros2 bag record -o imu_allan_$(date +%Y%m%d_%H%M) /imu/data_raw
+python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data_raw \
     --out shared/calib/<name>-imu.yaml
 ```
 Then copy the four `*_noise_density` / `*_random_walk` values into
-`shared/config/openvins/kalibr_imu_chain.yaml.template`.
+`shared/config/openvins/kalibr_imu_chain.yaml.template`, and set `IMU_RATE_HZ` in
+`shared/.env.example` to the rate this bag was recorded at (live raw ≈ 321 Hz).
+
+> The old `imu_allan_20260717_1411` bag was recorded on the fused `/imu/data` at
+> ~200 Hz and is being **redone** on raw `/imu/data_raw` — the noise values below and
+> in the template are placeholders until that no-Madgwick recording is processed.
 
 ### Camera–IMU extrinsic + time offset (the missing piece)
 Record a bag while gently exciting all 6 DoF in front of an April/checkerboard

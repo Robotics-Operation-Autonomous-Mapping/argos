@@ -28,7 +28,7 @@ time-sync helpers, and calibration drop folder.
 | `BLACKFLY_INFO_TOPIC` / `CAMERA_INFO_TOPIC` | `/blackfly/camera_info` | Pi B |
 | `VIVOTEK_LEFT_TOPIC` | `/vivotek/left/image_raw` | Pi B — **COLMAP only** |
 | `VIVOTEK_RIGHT_TOPIC` | `/vivotek/right/image_raw` | Pi B — **COLMAP only** |
-| `IMU_TOPIC` | `/imu/data` | Pi B (raw only; `/imu/data` is this driver's raw topic) |
+| `IMU_TOPIC` | `/imu/data_raw` | Pi B (RAW accel+gyro from ros2_icm20948; `/imu/data` is Madgwick-fused — do NOT use) |
 | `OV_ODOM_TOPIC` | `/ov_msckf/odomimu` | OpenVINS on Pi B |
 | `LIDAR_SCAN_TOPIC` | `/scan` | Lidar Pi |
 | `LIDAR_CLOUD_TOPIC` | `/points` | Lidar Pi (optional) |

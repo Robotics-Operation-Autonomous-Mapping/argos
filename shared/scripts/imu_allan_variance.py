@@ -12,7 +12,7 @@ These map directly onto Kalibr's `*_noise_density` / `*_random_walk` fields used
 OpenVINS (shared/config/openvins/kalibr_imu_chain.yaml.template).
 
 Usage:
-  python3 imu_allan_variance.py <bag_dir> [--topic /imu/data] [--out imu_allan.yaml]
+  python3 imu_allan_variance.py <bag_dir> [--topic /imu/data_raw] [--out imu_allan.yaml]
 
 <bag_dir> is the directory that contains metadata.yaml + the .db3/.mcap files.
 
@@ -116,7 +116,7 @@ def analyse(name, data, fs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("bag_dir", type=Path, help="dir with metadata.yaml + .db3/.mcap")
-    ap.add_argument("--topic", default="/imu/data", help="raw IMU topic")
+    ap.add_argument("--topic", default="/imu/data_raw", help="raw IMU topic")
     ap.add_argument("--out", type=Path, default=None, help="write Kalibr imu yaml snippet")
     args = ap.parse_args()
 

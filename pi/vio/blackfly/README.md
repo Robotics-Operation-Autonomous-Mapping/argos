@@ -100,8 +100,9 @@ ros2 run rqt_reconfigure rqt_reconfigure
 ### 3. How OpenVINS consumes it
 
 OpenVINS reads `CAMERA_IMAGE_TOPIC=/blackfly/image_raw` (see `shared/.env.example`) plus
-raw IMU `/imu/data`. With the driver publishing those topics, start VIO from the VIO
-tree (no recording involved):
+raw IMU `/imu/data_raw` (the RAW ros2_icm20948 topic — **not** the Madgwick-fused
+`/imu/data`; see [`../README.md`](../README.md#icm-20948-imu-external-driver)). With the
+driver publishing those topics, start VIO from the VIO tree (no recording involved):
 
 ```bash
 cd ..                                   # argos/pi/vio

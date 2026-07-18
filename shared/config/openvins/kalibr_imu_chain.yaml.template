@@ -9,9 +9,10 @@ imu0:
     - [0.0, 1.0, 0.0, 0.0]
     - [0.0, 0.0, 1.0, 0.0]
     - [0.0, 0.0, 0.0, 1.0]
-  # Measured from imu_allan_20260717_1411 (2.55 h static, ~200 Hz, /imu/data),
-  # axis-averaged overlapping Allan variance. Recompute with:
-  #   python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic <raw_imu>
+  # PLACEHOLDER values from imu_allan_20260717_1411 (2.55 h static, ~200 Hz) — that
+  # bag was on the Madgwick-FUSED /imu/data and is being redone on the RAW /imu/data_raw
+  # (ros2_icm20948, raw_only:=true, live rate ≈ 321 Hz). Recompute + update IMU_RATE_HZ:
+  #   python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data_raw
   # NOTE: for robust VIO it is common to INFLATE these ~5-10x (noise) and ~10x
   # (random walk) above the raw Allan values; tune if the filter is over-confident.
   accelerometer_noise_density: 4.795505e-03

@@ -4,7 +4,7 @@
 # (or is a poor mono VO substitute). ARGOS feeds OpenVINS odometry into
 # rtabmap via the `odom` remap (see pi/lidar, pi/vio, and laptop launches).
 #
-# Madgwick is intentionally omitted: OpenVINS needs raw IMU (/imu/data).
+# Madgwick is intentionally omitted: OpenVINS needs raw IMU (/imu/data_raw).
 # OpenVINS has no VIO loop-closure node analogous to VINS loop_fusion —
 # RTABMAP owns LC.
 #

@@ -52,12 +52,15 @@ python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic /imu/data_raw \
     --out shared/calib/<name>-imu.yaml
 ```
 Then copy the four `*_noise_density` / `*_random_walk` values into
-`shared/config/openvins/kalibr_imu_chain.yaml.template`, and set `IMU_RATE_HZ` in
-`shared/.env.example` to the rate this bag was recorded at (live raw ≈ 321 Hz).
+`shared/config/openvins/kalibr_imu_chain.yaml.template`, and keep `IMU_RATE_HZ` in
+`shared/.env.example` at the **locked 200 Hz** this bag is recorded at (the raw
+driver is pinned to 200 Hz — see
+[`../../pi/vio/README.md`](../../pi/vio/README.md#lock-the-raw-topic-to-a-real-200-hz)).
 
-> The old `imu_allan_20260717_1411` bag was recorded on the fused `/imu/data` at
-> ~200 Hz and is being **redone** on raw `/imu/data_raw` — the noise values below and
-> in the template are placeholders until that no-Madgwick recording is processed.
+> The old `imu_allan_20260717_1411` bag was recorded on the fused `/imu/data` and is
+> being **redone** on raw `/imu/data_raw` at the locked **200 Hz** — the noise values
+> below and in the template are placeholders until that no-Madgwick recording is
+> processed. Record it with `record_camimu_calib.sh --allan` (see `pi/vio/blackfly/`).
 
 ### Camera–IMU extrinsic + time offset (the missing piece)
 Record a bag while gently exciting all 6 DoF in front of an April/checkerboard

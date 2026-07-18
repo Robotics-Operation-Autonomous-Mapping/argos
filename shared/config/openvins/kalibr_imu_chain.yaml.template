@@ -9,11 +9,15 @@ imu0:
     - [0.0, 1.0, 0.0, 0.0]
     - [0.0, 0.0, 1.0, 0.0]
     - [0.0, 0.0, 0.0, 1.0]
-  # Replace with datasheet / Kalibr noise for your IMU.
-  accelerometer_noise_density: 2.0000e-3
-  accelerometer_random_walk: 3.0000e-3
-  gyroscope_noise_density: 1.6968e-04
-  gyroscope_random_walk: 1.9393e-05
+  # Measured from imu_allan_20260717_1411 (2.55 h static, ~200 Hz, /imu/data),
+  # axis-averaged overlapping Allan variance. Recompute with:
+  #   python3 shared/scripts/imu_allan_variance.py <bag_dir> --topic <raw_imu>
+  # NOTE: for robust VIO it is common to INFLATE these ~5-10x (noise) and ~10x
+  # (random walk) above the raw Allan values; tune if the filter is over-confident.
+  accelerometer_noise_density: 4.795505e-03
+  accelerometer_random_walk: 7.188505e-05
+  gyroscope_noise_density: 1.815483e-03
+  gyroscope_random_walk: 6.056779e-06
   rostopic: ${IMU_TOPIC}
   time_offset: 0.0
   update_rate: ${IMU_RATE_HZ}

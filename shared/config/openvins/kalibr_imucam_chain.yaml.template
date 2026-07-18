@@ -1,19 +1,24 @@
 %YAML:1.0
 
 # ARGOS cam0 chain (Kalibr-compatible). Rendered by entrypoint via envsubst.
-# REPLACE intrinsics / T_imu_cam with real Kalibr results before serious runs.
 # Mono only — cam1 omitted (use_stereo: false, max_cameras: 1).
+#
+# Intrinsics: REAL Blackfly result from roam_cam0_filtered (Kalibr, equidistant
+#   fisheye, 1288x728). Source: shared/calib/roam_cam0_filtered-camchain.yaml.
+# T_imu_cam: STILL A PLACEHOLDER (identity). This needs a Kalibr cam-IMU run
+#   (kalibr_calibrate_imu_camera on a synchronized Blackfly+IMU bag). Do NOT
+#   trust VIO output until this extrinsic + time_offset are calibrated.
 
 cam0:
-  T_imu_cam: # R_CtoI, p_CinI — identity placeholder; replace with Kalibr
+  T_imu_cam: # R_CtoI, p_CinI — identity placeholder; replace with Kalibr cam-IMU
     - [1.0, 0.0, 0.0, 0.0]
     - [0.0, 1.0, 0.0, 0.0]
     - [0.0, 0.0, 1.0, 0.0]
     - [0.0, 0.0, 0.0, 1.0]
   cam_overlaps: []
   camera_model: pinhole
-  distortion_coeffs: [0.0, 0.0, 0.0, 0.0]
-  distortion_model: radtan
-  intrinsics: [500.0, 500.0, 320.0, 240.0] # fu, fv, cu, cv
+  distortion_coeffs: [-0.049692295797108814, 0.00799978634930751, -0.0032373094541075444, -0.0015705319396084167]
+  distortion_model: equidistant
+  intrinsics: [704.6780501934732, 705.0454361923713, 629.4925277829832, 359.7943902813907] # fu, fv, cu, cv
   resolution: [${IMAGE_WIDTH}, ${IMAGE_HEIGHT}]
   rostopic: ${CAMERA_IMAGE_TOPIC}

@@ -27,6 +27,18 @@ Values from the two DONE items are already baked into
 `T_imu_cam` in the imucam template is still an identity placeholder until the
 cam–IMU calibration below is run.
 
+## Priority order (highest impact first)
+
+| # | Item | Why / when | Status |
+|---|---|---|---|
+| 1 | Cam–IMU **extrinsic + time offset** (`T_imu_cam`, `timeshift`) | Missing piece; VIO is untrustworthy without it | TODO |
+| 2 | **2D lidar extrinsic TF** (`laser_link` → base/IMU) | Needed only if `RTABMAP_USE_LIDAR=true`; measure/CAD it + keep scan plane level. NO intrinsic calib for a 2D lidar | TODO (if using lidar) |
+| 3 | IMU **noise** (Allan: noise density / random walk) | Feeds OpenVINS IMU model | DONE |
+| 4 | Camera **intrinsics** (Blackfly) | fu,fv,cu,cv + distortion | DONE |
+| 5 | IMU **intrinsics** (scale / misalignment `Tw/Ta/Tg`) | Second-order; skip unless chasing accuracy | skip (disabled) |
+| 6 | IMU **g-sensitivity** | Usually negligible | skip (disabled) |
+| — | Vivotek intrinsics ×2 | Offline COLMAP photogrammetry only | TODO |
+
 ## How to (re)produce these
 
 ### IMU noise (Allan variance)

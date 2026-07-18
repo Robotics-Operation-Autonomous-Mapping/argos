@@ -25,11 +25,27 @@ def env(name: str, default: str = "") -> str:
     return os.environ.get(name, default)
 
 
+def shared_dir() -> str:
+    """Resolve the argos shared/ dir for both native and docker runs.
+
+    Order: ARGOS_SHARED override → docker mount (/workspace when present) →
+    repo shared/ computed relative to this launch file (<repo>/argos/shared).
+    """
+    override = os.environ.get("ARGOS_SHARED")
+    if override:
+        return override
+    if os.path.isdir("/workspace/config"):
+        return "/workspace"
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.abspath(os.path.join(here, "..", "..", "..", "shared"))
+
+
 def _launch_setup(context, *args, **kwargs):
     camera_frame = env("CAMERA_FRAME_ID", "blackfly_link")
     imu_frame = env("IMU_FRAME_ID", "imu_link")
     foxglove_port = int(env("FOXGLOVE_PORT", "8765"))
     ov_config = env("OV_ESTIMATOR_CONFIG", "/tmp/openvins/estimator_config.yaml")
+    foxglove_config = f"{shared_dir()}/config/foxglove_bridge.yaml"
 
     nodes = [
         # Placeholder camera←IMU extrinsic TF. Replace with Kalibr / URDF.
@@ -64,7 +80,7 @@ def _launch_setup(context, *args, **kwargs):
             name="foxglove_bridge",
             output="screen",
             parameters=[
-                "/workspace/config/foxglove_bridge.yaml",
+                foxglove_config,
                 {"port": foxglove_port},
             ],
         ),

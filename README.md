@@ -1,4 +1,4 @@
-# ARGOS
+# ARGOS Autonomous Room Geometry Optical Scanner
 
 **OpenVINS mono+IMU VIO → RTABMAP mapping / loop closure** across two Raspberry
 Pis and an amd64 laptop. ROS 2 Humble, CycloneDDS multi-host, Foxglove, chrony
